@@ -1,0 +1,8 @@
+*.iml
+*.bin
+*.txt
+.idea
+target
+
+# Class only for testing
+MainTest.java

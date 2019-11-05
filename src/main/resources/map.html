@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta charset="utf-8">
+    <title></title>
+
+    <link href="https://www.mapbox.com/base/latest/base.css" rel="stylesheet">
+
+    <link href="https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.js"></script>
+    <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-hash/v0.2.1/leaflet-hash.js"></script>
+
+    <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+        }
+
+        .shadow {
+            box-shadow: 0 0 25px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .round-bottomleft {
+            border-bottom-left-radius: 3px;
+        }
+
+        .mapboxgl-ctrl-nav > a {
+            border-color: rgba(0, 0, 0, .1);
+        }
+
+        @media only screen and (max-width: 640px) {
+            .leaflet-left .leaflet-control,
+            .mapboxgl-ctrl-top-left .mapboxgl-ctrl {
+                margin-top: 70px;
+            }
+
+            .round-bottomleft {
+                border-bottom-left-radius: 0;
+            }
+
+            .mobile-fullwidth {
+                width: 100%;
+                height: 60px;
+                overflow: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div id="map" class="mapboxgl-map"></div>
+<script>
+    var markers = [];
+    var cursor = 0;
+    L.mapbox.accessToken = 'pk.eyJ1Ijoic3RpcmFudGUiLCJhIjoiY2lzZzBlbWw1MDAzejJubzY0ZXV4MjA4MiJ9.za3E1DQUC_IvVgohAYza0w';
+
+    window.map = L.mapbox.map('map', '', {
+        scrollWheelZoom: true,
+        minZoom: 1
+    });
+
+    document.sLayer = L.mapbox.styleLayer('mapbox://styles/stirante/cisg0fw8n005t2xpbw2x33uk0');
+    document.sLayer.addTo(map);
+
+    if (window.location.hash) {
+        window.location.hash = window.location.hash
+            .substring(1).split('/').slice(0, 3).join('/');
+    } else {
+        map.setView([0, 0], 16);
+    }
+
+    var hash = new L.hash(map);
+//    document.marker = L.marker([0, 0]);
+//    document.marker.addTo(map);
+
+    document.setLoc = function setLoc(latlong) {
+//        document.marker.setLatLng(latlong);
+        window.map.setView(latlong);
+    };
+    document.addBus = function addBus(latlong) {
+        var bus;
+        if (cursor === markers.length) {
+            bus = L.marker(latlong);
+            bus.setIcon(L.icon({
+                "iconUrl": "https://findicons.com/files/icons/2711/free_icons_for_windows8_metro/128/bus.png",
+                "iconSize": [25, 25],
+                "iconAnchor": [12.5, 12.5],
+                "popupAnchor": [0, 0],
+                "className": "dot"
+            }));
+            bus.addTo(map);
+            markers.push(bus);
+        } else {
+            bus = markers[cursor];
+            bus.setLatLng(latlong);
+        }
+        cursor++;
+    };
+    document.clearBuses = function clearBuses() {
+        cursor = 0;
+    };
+
+    hash.parseHash = function (hash) {
+        if (hash.indexOf('#') === 0) {
+            hash = hash.substr(1);
+        }
+        var args = hash.split('/');
+        if (args.length === 3) {
+            var zoom = parseInt(args[0], 10) + 1,
+                lat = parseFloat(args[1]),
+                lon = parseFloat(args[2]);
+            if (isNaN(zoom) || isNaN(lat) || isNaN(lon)) {
+                return false;
+            } else {
+                return {
+                    center: new L.LatLng(lat, lon),
+                    zoom: zoom
+                };
+            }
+        } else {
+            return false;
+        }
+    };
+
+    hash.formatHash = function (map) {
+        var center = map.getCenter(),
+            zoom = map.getZoom() - 1,
+            precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));
+
+        return '#' + [zoom,
+            center.lat.toFixed(precision),
+            center.lng.toFixed(precision)
+        ].join('/');
+    }
+</script>
+
+</body>
+</html>
